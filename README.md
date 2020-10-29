@@ -2,6 +2,6 @@
 
 Generates a hexagonal maze
 
-# Useage
+# Usage
 
-python3 gen_world.py 
+`python3 gen_world.py` 
