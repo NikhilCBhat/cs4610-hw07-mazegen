@@ -100,6 +100,35 @@ def saunion(stringArts):
     return TRANSPARENT
   return result
 
+def resolveChar(char):
+  return  " " if char == TRANSPARENT else char
+
+def printArt(stringArt, dimension):
+  sizeX, sizeY = dimension
+  lines = []
+  for i in range(sizeX):
+    line = "".join([resolveChar(stringArt((i, j))) for j in range(sizeY)])
+    print(line)
+    lines.append(line)
+  return lines
+
+def getMazeArt(nodes, edges, pathNodes):
+    def getNodeArt(node):
+        translation = nodeToCoordStyleA(node)
+        hexaProvider = hexProviderA
+        openDoors = getOpenDoorsFrom(node, edges)
+        hexaArt = hexaProvider(openDoors, node in pathNodes)
+        return translate(hexaArt, translation)
+    return saunion([getNodeArt(node) for node in nodes])
+
+def printMaze(nodes, edges, size, showSolution = False):
+    pathNodes = set()
+    mazeArt = translate(getMazeArt(nodes, edges, pathNodes), (2 * size, 2 * size))
+    return printArt(mazeArt, (4 * size + 3, 4 * size + 3))
+
+def hexProviderA(openDoors, isInPath = False):
+  doors = [door for direction, door in DOORS_STYLE_A.items() if direction not in openDoors]
+  return saunion(doors)
 
 ## --  Maze Generation -- ## 
 def isInside(node, size):
@@ -150,22 +179,6 @@ def shuffle(edgeList, seed = None):
     random.seed(seed)
     random.shuffle(edgeList)
 
-
-#-------------------
-
-
-def resolveChar(char):
-  return  " " if char == TRANSPARENT else char
-
-def printArt(stringArt, dimension):
-  sizeX, sizeY = dimension
-  lines = []
-  for i in range(sizeX):
-    line = "".join([resolveChar(stringArt((i, j))) for j in range(sizeY)])
-    print(line)
-    lines.append(line)
-  return lines
-    
 def nodeToCoordStyleA(node):
     x, y, z = node
     return (x * V1_A[0] + y * V2_A[0], x * V1_A[1] + y * V2_A[1])
@@ -173,15 +186,6 @@ def nodeToCoordStyleA(node):
 def getOpenDoorsFrom(node, edges):
   nodeEdges = set(filter(lambda edge: node in edge, edges))
   return {direction for direction in DIRS if createEdge(node, addVector(node, direction)) in nodeEdges}
-
-def getMazeArt(nodes, edges, pathNodes, style):
-    def getNodeArt(node):
-        translation = style["hexaCoordToFieldCoord"](node)
-        hexaProvider = style["fieldArtProvider"]
-        openDoors = getOpenDoorsFrom(node, edges)
-        hexaArt = hexaProvider(openDoors, node in pathNodes)
-        return translate(hexaArt, translation)
-    return saunion([getNodeArt(node) for node in nodes])
 
 def addEdgeToDict(edge, dictionary):
   start, end = edge
@@ -225,29 +229,10 @@ def getPath(edges, startNode, endNode):
     else:
         return None
 
-
-def printMaze(nodes, edges, size, style, showSolution = False):
-    pathNodes = set()
-    mazeArt = translate(getMazeArt(nodes, edges, pathNodes, style), style["translation"](size))
-    return printArt(mazeArt, style["totalSize"](size))
-
-def hexProviderA(openDoors, isInPath = False):
-  doors = [door for direction, door in DOORS_STYLE_A.items() if direction not in openDoors]
-  return saunion(doors)
-
-MAZE_STYLES = {
-  "A": {
-      "fieldArtProvider": hexProviderA,
-      "totalSize": lambda size: (4 * size + 3, 4 * size + 3),
-      "translation": lambda size: (2 * size, 2 * size),
-      "hexaCoordToFieldCoord": nodeToCoordStyleA,
-  }
-}
-
 def generate_maze():
   nodes = getNodes(SIZE)
   edgeList = getEdges(nodes, SIZE)
   shuffle(edgeList, SEED)
   mazeEdges = generateMazeEdges(edgeList)
 
-  return printMaze(nodes, mazeEdges, SIZE, MAZE_STYLES["A"])
+  return printMaze(nodes, mazeEdges, SIZE)

@@ -33,7 +33,6 @@ def add_wall(parent,x,y,z=0, r1=0, r2=0, r3=0):
     wall_count += 1
 
 def write_xml_file(xml_data, file_name):
-    # mydata = str(ET.tostring(xml_data))[2:-1]
     xml_string = xml.dom.minidom.parseString(ET.tostring(xml_data)).toprettyxml()
     with open(file_name, "w") as f:
         f.write(xml_string)
